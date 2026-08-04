@@ -77,10 +77,17 @@ export interface Film {
 }
 
 export interface EnrichedCharacter extends Character {
-  speciesName: string[];
+  speciesName: string;
   homeworldName: string;
   filmTitles: string[];
   imageUrl: string;
+}
+
+export interface CharacterDetails {
+  character: EnrichedCharacter;
+  homeworld: Planet;
+  species: Species[];
+  films: Film[];
 }
 
 export type ApiListResponse<T> = {

@@ -4,6 +4,7 @@ import { FaRocket, FaSyncAlt } from 'react-icons/fa';
 import { PEOPLE_PAGE_SIZE } from '../../api/people';
 import { env } from '../../config/env';
 import { PageShell } from '../../components/layout/PageShell';
+import type { Character } from '../../types/swapi';
 import { usePeopleQuery } from './hooks/usePeopleQuery';
 import { CharacterGrid } from './components/CharacterGrid';
 import { Pagination } from './components/Pagination';
@@ -12,9 +13,11 @@ import {
   PeopleErrorState,
   PeopleLoadingState,
 } from './components/PeopleState';
+import { CharacterDetailsModal } from './components/CharacterDetailsModal';
 
 export function CharactersPage(): JSX.Element {
   const [page, setPage] = useState(1);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const { data, dataUpdatedAt, error, isError, isFetching, isPending, refetch } =
     usePeopleQuery(page);
 
@@ -107,7 +110,13 @@ export function CharactersPage(): JSX.Element {
           ) : null}
 
           {data && characters.length > 0 ? (
-            <CharacterGrid characters={characters} page={page} />
+            <CharacterGrid
+              characters={characters}
+              onSelect={(character) => {
+                setSelectedCharacter(character);
+              }}
+              page={page}
+            />
           ) : (
             <PeopleEmptyState
               onRetry={() => {
@@ -126,9 +135,11 @@ export function CharactersPage(): JSX.Element {
               hasNext={hasNext}
               hasPrevious={hasPrevious}
               onNext={() => {
+                setSelectedCharacter(null);
                 setPage((currentPage) => currentPage + 1);
               }}
               onPrevious={() => {
+                setSelectedCharacter(null);
                 setPage((currentPage) => Math.max(1, currentPage - 1));
               }}
               page={page}
@@ -137,6 +148,15 @@ export function CharactersPage(): JSX.Element {
           </div>
         </section>
       )}
+
+      {selectedCharacter ? (
+        <CharacterDetailsModal
+          character={selectedCharacter}
+          onClose={() => {
+            setSelectedCharacter(null);
+          }}
+        />
+      ) : null}
     </PageShell>
   );
 }

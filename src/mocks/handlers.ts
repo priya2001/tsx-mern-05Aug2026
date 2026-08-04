@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { buildPeopleUrl, buildSwapiUrl } from '../api/swapi';
-import type { Character, PeopleApiResponse } from '../types/swapi';
+import type { Character, Film, PeopleApiResponse, Planet, Species } from '../types/swapi';
 
 const createCharacter = (character: Partial<Character>): Character =>
   ({
@@ -198,9 +198,221 @@ const responseForPage = (page: number): PeopleApiResponse => {
   };
 };
 
+const createPlanet = (planet: Partial<Planet>): Planet =>
+  ({
+    name: '',
+    rotation_period: '',
+    orbital_period: '',
+    diameter: '',
+    climate: '',
+    gravity: '',
+    terrain: '',
+    surface_water: '',
+    population: '',
+    residents: [],
+    films: [],
+    created: '',
+    edited: '',
+    url: '',
+    ...planet,
+  }) as Planet;
+
+const createSpecies = (species: Partial<Species>): Species =>
+  ({
+    name: '',
+    classification: '',
+    designation: '',
+    average_height: '',
+    skin_colors: '',
+    hair_colors: '',
+    eye_colors: '',
+    average_lifespan: '',
+    homeworld: null,
+    language: '',
+    people: [],
+    films: [],
+    created: '',
+    edited: '',
+    url: '',
+    ...species,
+  }) as Species;
+
+const createFilm = (film: Partial<Film>): Film =>
+  ({
+    title: '',
+    episode_id: 0,
+    opening_crawl: '',
+    director: '',
+    producer: '',
+    release_date: '',
+    characters: [],
+    planets: [],
+    starships: [],
+    vehicles: [],
+    species: [],
+    created: '',
+    edited: '',
+    url: '',
+    ...film,
+  }) as Film;
+
 export const handlers = [
   http.get(buildSwapiUrl('/people/'), ({ request }) => {
     const page = Number(new URL(request.url).searchParams.get('page') ?? '1');
     return HttpResponse.json(responseForPage(page));
   }),
+  http.get(buildSwapiUrl('/planets/1/'), () =>
+    HttpResponse.json(
+      createPlanet({
+        name: 'Tatooine',
+        climate: 'arid',
+        terrain: 'desert',
+        population: '200000',
+        residents: ['https://swapi.dev/api/people/1/'],
+        url: 'https://swapi.dev/api/planets/1/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/planets/2/'), () =>
+    HttpResponse.json(
+      createPlanet({
+        name: 'Alderaan',
+        climate: 'temperate',
+        terrain: 'grasslands, mountains',
+        population: '2000000000',
+        residents: ['https://swapi.dev/api/people/5/'],
+        url: 'https://swapi.dev/api/planets/2/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/planets/8/'), () =>
+    HttpResponse.json(
+      createPlanet({
+        name: 'Naboo',
+        climate: 'temperate',
+        terrain: 'grassy hills, swamps, forests, mountains',
+        population: '4500000000',
+        residents: ['https://swapi.dev/api/people/8/'],
+        url: 'https://swapi.dev/api/planets/8/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/planets/14/'), () =>
+    HttpResponse.json(
+      createPlanet({
+        name: 'Kashyyyk',
+        climate: 'tropical',
+        terrain: 'jungle, forests, mountains',
+        population: '45000000',
+        residents: ['https://swapi.dev/api/people/13/'],
+        url: 'https://swapi.dev/api/planets/14/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/planets/22/'), () =>
+    HttpResponse.json(
+      createPlanet({
+        name: 'Corellia',
+        climate: 'temperate',
+        terrain: 'plains, urban, hills, forests',
+        population: '3000000000',
+        residents: ['https://swapi.dev/api/people/14/'],
+        url: 'https://swapi.dev/api/planets/22/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/species/2/'), () =>
+    HttpResponse.json(
+      createSpecies({
+        name: 'Droid',
+        classification: 'artificial',
+        designation: 'sentient',
+        average_height: 'n/a',
+        skin_colors: 'n/a',
+        hair_colors: 'n/a',
+        eye_colors: 'n/a',
+        average_lifespan: 'indefinite',
+        homeworld: null,
+        language: 'n/a',
+        url: 'https://swapi.dev/api/species/2/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/species/3/'), () =>
+    HttpResponse.json(
+      createSpecies({
+        name: 'Wookiee',
+        classification: 'mammal',
+        designation: 'sentient',
+        average_height: '210',
+        skin_colors: 'gray',
+        hair_colors: 'black, brown',
+        eye_colors: 'blue, green, yellow, brown, golden, red',
+        average_lifespan: '400',
+        homeworld: 'https://swapi.dev/api/planets/14/',
+        language: 'Shyriiwook',
+        url: 'https://swapi.dev/api/species/3/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/1/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'A New Hope',
+        episode_id: 4,
+        release_date: '1977-05-25',
+        url: 'https://swapi.dev/api/films/1/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/2/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'The Empire Strikes Back',
+        episode_id: 5,
+        release_date: '1980-05-17',
+        url: 'https://swapi.dev/api/films/2/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/3/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'Return of the Jedi',
+        episode_id: 6,
+        release_date: '1983-05-25',
+        url: 'https://swapi.dev/api/films/3/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/4/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'The Phantom Menace',
+        episode_id: 1,
+        release_date: '1999-05-19',
+        url: 'https://swapi.dev/api/films/4/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/5/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'Attack of the Clones',
+        episode_id: 2,
+        release_date: '2002-05-16',
+        url: 'https://swapi.dev/api/films/5/',
+      }),
+    ),
+  ),
+  http.get(buildSwapiUrl('/films/6/'), () =>
+    HttpResponse.json(
+      createFilm({
+        title: 'Revenge of the Sith',
+        episode_id: 3,
+        release_date: '2005-05-19',
+        url: 'https://swapi.dev/api/films/6/',
+      }),
+    ),
+  ),
 ];
