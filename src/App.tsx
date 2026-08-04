@@ -1,5 +1,5 @@
-import { HomePage } from './features/home/HomePage';
+import { CharactersPage } from './features/characters/CharactersPage';
 
 export default function App(): JSX.Element {
-  return <HomePage />;
+  return <CharactersPage />;
 }

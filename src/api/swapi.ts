@@ -9,3 +9,13 @@ export const buildSwapiUrl = (path: string): string => {
 
   return new URL(normalizedPath, `${swapiBaseUrl}/`).toString();
 };
+
+export const buildPeopleUrl = (page: number): string => {
+  const url = new URL(buildSwapiUrl('/people/'));
+
+  if (page > 1) {
+    url.searchParams.set('page', String(page));
+  }
+
+  return url.toString();
+};
