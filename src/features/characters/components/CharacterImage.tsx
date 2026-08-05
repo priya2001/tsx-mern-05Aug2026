@@ -15,15 +15,15 @@ export function CharacterImage({
   className = '',
   loading = 'lazy',
 }: CharacterImageProps): JSX.Element {
-  const [useFallbackImage, setUseFallbackImage] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    setUseFallbackImage(false);
+    setAttempt(0);
   }, [character.url, seed]);
 
-  const source = useFallbackImage
-    ? buildCharacterFallbackImageUrl(character, seed)
-    : buildCharacterImageUrl(seed);
+  const source = attempt === 0
+    ? buildCharacterImageUrl(seed)
+    : buildCharacterFallbackImageUrl(character, `${seed}-${attempt}`);
 
   return (
     <img
@@ -33,7 +33,7 @@ export function CharacterImage({
       loading={loading}
       src={source}
       onError={() => {
-        setUseFallbackImage(true);
+        setAttempt((currentAttempt) => Math.min(currentAttempt + 1, 3));
       }}
     />
   );
