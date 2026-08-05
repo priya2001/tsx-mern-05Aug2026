@@ -1,6 +1,6 @@
 import type { Character } from '../../../types/swapi';
 
-const PICSUM_IMAGE_IDS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 237];
+const PICSUM_IMAGE_IDS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 237,30,100,101];
 
 const hashString = (value: string): number => {
   let hash = 0;
