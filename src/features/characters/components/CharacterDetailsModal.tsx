@@ -9,13 +9,13 @@ import {
 } from 'react-icons/fa';
 import type { Character } from '../../../types/swapi';
 import { InfoCard } from '../../../components/ui/InfoCard';
-import { buildCharacterImageUrl } from '../utils/characterMedia';
 import {
   formatCharacterCreatedDate,
   formatCharacterHeightInMeters,
   formatCharacterMass,
 } from '../utils/characterDetails';
 import { useCharacterDetailsQuery } from '../hooks/useCharacterDetailsQuery';
+import { CharacterImage } from './CharacterImage';
 
 type CharacterDetailsModalProps = {
   character: Character;
@@ -29,7 +29,6 @@ export function CharacterDetailsModal({
   const headingId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const { data, error, isError, isPending, isFetching, refetch } = useCharacterDetailsQuery(character);
-  const imageUrl = data?.character.imageUrl ?? buildCharacterImageUrl(character.url);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -140,12 +139,11 @@ export function CharacterDetailsModal({
             <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
               <div className="space-y-4">
                 <div className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-900/80 shadow-2xl shadow-black/30">
-                  <img
-                    alt={character.name}
+                  <CharacterImage
+                    character={character}
                     className="aspect-[3/4] w-full object-cover"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    src={imageUrl}
+                    loading="eager"
+                    seed={character.url}
                   />
                 </div>
 

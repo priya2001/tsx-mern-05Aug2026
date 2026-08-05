@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import type { Character } from '../../../types/swapi';
-import { buildCharacterImageUrl, createCharacterImageSeed } from '../utils/characterMedia';
+import { createCharacterImageSeed } from '../utils/characterMedia';
 import { getCharacterSpeciesLabel, getCharacterTheme } from '../utils/characterTheme';
+import { CharacterImage } from './CharacterImage';
 
 type CharacterCardProps = {
   character: Character;
@@ -18,7 +19,6 @@ export function CharacterCard({
   onSelect,
 }: CharacterCardProps): JSX.Element {
   const [imageSeed] = useState(() => createCharacterImageSeed(character, page, index));
-  const [imageFailed, setImageFailed] = useState(false);
   const theme = getCharacterTheme(character);
   const addedDate = format(new Date(character.created), 'dd-MM-yyyy');
 
@@ -48,20 +48,12 @@ export function CharacterCard({
           </div>
 
           <div className="overflow-hidden rounded-[22px] border border-white/10 bg-slate-950/50">
-            {imageFailed ? (
-              <div className="flex aspect-[3/4] items-center justify-center bg-slate-900/80 text-sm text-slate-300">
-                Image unavailable
-              </div>
-            ) : (
-              <img
-                alt={character.name}
-                className="aspect-[3/4] w-full object-cover transition duration-500 group-hover:scale-105"
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                src={buildCharacterImageUrl(imageSeed)}
-                onError={() => setImageFailed(true)}
-              />
-            )}
+            <CharacterImage
+              character={character}
+              className="aspect-[3/4] w-full object-cover transition duration-500 group-hover:scale-105"
+              loading="eager"
+              seed={imageSeed}
+            />
           </div>
 
           <div className="space-y-2">
