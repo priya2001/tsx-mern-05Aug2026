@@ -144,6 +144,23 @@ export async function fetchFilmByUrl(url: string): Promise<Film> {
   );
 }
 
+const createFallbackPlanet = (url: string): Planet => ({
+  name: 'Unknown homeworld',
+  rotation_period: 'Unknown',
+  orbital_period: 'Unknown',
+  diameter: 'Unknown',
+  climate: 'Unknown',
+  gravity: 'Unknown',
+  terrain: 'Unknown',
+  surface_water: 'Unknown',
+  population: 'Unknown',
+  residents: [],
+  films: [],
+  created: '',
+  edited: '',
+  url,
+});
+
 export async function fetchCharacterResources(character: Character): Promise<{
   homeworld: Planet;
   species: Species[];
@@ -153,11 +170,21 @@ export async function fetchCharacterResources(character: Character): Promise<{
     throw new Error('Character homeworld is missing from the API response.');
   }
 
-  const [homeworld, species, films] = await Promise.all([
-    fetchPlanetByUrl(character.homeworld),
-    Promise.all(character.species.map((speciesUrl) => fetchSpeciesByUrl(speciesUrl))),
-    Promise.all(character.films.map((filmUrl) => fetchFilmByUrl(filmUrl))),
-  ]);
+  const homeworld = await fetchPlanetByUrl(character.homeworld).catch(() =>
+    createFallbackPlanet(character.homeworld),
+  );
+
+  const speciesResults = await Promise.allSettled(
+    character.species.map((speciesUrl) => fetchSpeciesByUrl(speciesUrl)),
+  );
+  const species = speciesResults.flatMap((result) =>
+    result.status === 'fulfilled' ? [result.value] : [],
+  );
+
+  const filmResults = await Promise.allSettled(
+    character.films.map((filmUrl) => fetchFilmByUrl(filmUrl)),
+  );
+  const films = filmResults.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
 
   return { homeworld, species, films };
 }

@@ -10,10 +10,26 @@ if (!rootElement) {
   throw new Error('Root element #root not found');
 }
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
-  </React.StrictMode>,
-);
+const renderApp = (): void => {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </React.StrictMode>,
+  );
+};
+
+async function bootstrap(): Promise<void> {
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./mocks/browser');
+
+    await worker.start({
+      onUnhandledRequest: 'error',
+    });
+  }
+
+  renderApp();
+}
+
+void bootstrap();
