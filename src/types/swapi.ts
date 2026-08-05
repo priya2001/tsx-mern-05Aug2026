@@ -90,6 +90,11 @@ export interface CharacterDetails {
   films: Film[];
 }
 
+export interface CharacterCatalog {
+  characters: EnrichedCharacter[];
+  count: number;
+}
+
 export type ApiListResponse<T> = {
   count: number;
   next: string | null;

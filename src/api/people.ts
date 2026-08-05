@@ -68,3 +68,22 @@ export async function fetchPeople(page: number): Promise<PeopleApiResponse> {
 
   return data;
 }
+
+export async function fetchAllPeople(): Promise<PeopleApiResponse> {
+  const firstPage = await fetchPeople(1);
+  const results = [...firstPage.results];
+  let nextPage = firstPage.next === null ? null : 2;
+
+  while (nextPage !== null) {
+    const response = await fetchPeople(nextPage);
+    results.push(...response.results);
+    nextPage = response.next === null ? null : nextPage + 1;
+  }
+
+  return {
+    count: firstPage.count,
+    next: null,
+    previous: null,
+    results,
+  };
+}

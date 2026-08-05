@@ -6,6 +6,12 @@ type PeopleErrorStateProps = {
   onRetry: () => void;
 };
 
+type PeopleEmptyStateProps = {
+  onRetry: () => void;
+  title?: string;
+  message?: string;
+};
+
 export function PeopleLoadingState(): JSX.Element {
   return (
     <div
@@ -57,7 +63,11 @@ export function PeopleErrorState({ title, message, onRetry }: PeopleErrorStatePr
   );
 }
 
-export function PeopleEmptyState({ onRetry }: { onRetry: () => void }): JSX.Element {
+export function PeopleEmptyState({
+  onRetry,
+  title = 'No characters found',
+  message = 'The API returned an empty page. Try a different page or retry the request.',
+}: PeopleEmptyStateProps): JSX.Element {
   return (
     <div className="flex flex-col items-start gap-4 rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
       <div className="flex items-start gap-3">
@@ -65,10 +75,8 @@ export function PeopleEmptyState({ onRetry }: { onRetry: () => void }): JSX.Elem
           <FaSearch aria-hidden="true" className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="text-xl font-bold text-white">No characters found</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-300">
-            The API returned an empty page. Try a different page or retry the request.
-          </p>
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-300">{message}</p>
         </div>
       </div>
       <button

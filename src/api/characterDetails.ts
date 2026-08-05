@@ -11,6 +11,10 @@ const isStringArray = (value: unknown): value is string[] =>
 const isNullableString = (value: unknown): value is string | null =>
   value === null || isString(value);
 
+const speciesRequestCache = new Map<string, Promise<Species>>();
+const planetRequestCache = new Map<string, Promise<Planet>>();
+const filmRequestCache = new Map<string, Promise<Film>>();
+
 const fetchValidatedJson = async <T>(
   url: string,
   isValue: (value: unknown) => value is T,
@@ -29,6 +33,27 @@ const fetchValidatedJson = async <T>(
   }
 
   return data;
+};
+
+const fetchCachedJson = <T>(
+  cache: Map<string, Promise<T>>,
+  url: string,
+  loader: () => Promise<T>,
+): Promise<T> => {
+  const cachedValue = cache.get(url);
+
+  if (cachedValue) {
+    return cachedValue;
+  }
+
+  const request = loader().catch((error: unknown) => {
+    cache.delete(url);
+    throw error;
+  });
+
+  cache.set(url, request);
+
+  return request;
 };
 
 const isSpecies = (value: unknown): value is Species => {
@@ -102,15 +127,21 @@ const isFilm = (value: unknown): value is Film => {
 };
 
 export async function fetchSpeciesByUrl(url: string): Promise<Species> {
-  return fetchValidatedJson(url, isSpecies, 'Received an invalid species response from the API.');
+  return fetchCachedJson(speciesRequestCache, url, () =>
+    fetchValidatedJson(url, isSpecies, 'Received an invalid species response from the API.'),
+  );
 }
 
 export async function fetchPlanetByUrl(url: string): Promise<Planet> {
-  return fetchValidatedJson(url, isPlanet, 'Received an invalid homeworld response from the API.');
+  return fetchCachedJson(planetRequestCache, url, () =>
+    fetchValidatedJson(url, isPlanet, 'Received an invalid homeworld response from the API.'),
+  );
 }
 
 export async function fetchFilmByUrl(url: string): Promise<Film> {
-  return fetchValidatedJson(url, isFilm, 'Received an invalid film response from the API.');
+  return fetchCachedJson(filmRequestCache, url, () =>
+    fetchValidatedJson(url, isFilm, 'Received an invalid film response from the API.'),
+  );
 }
 
 export async function fetchCharacterResources(character: Character): Promise<{

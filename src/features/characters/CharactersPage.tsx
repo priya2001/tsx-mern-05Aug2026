@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { FaRocket, FaSyncAlt } from 'react-icons/fa';
 import { PEOPLE_PAGE_SIZE } from '../../api/people';
 import { env } from '../../config/env';
 import { PageShell } from '../../components/layout/PageShell';
 import type { Character } from '../../types/swapi';
-import { usePeopleQuery } from './hooks/usePeopleQuery';
+import { useCharacterCatalogQuery } from './hooks/useCharacterCatalogQuery';
 import { CharacterGrid } from './components/CharacterGrid';
 import { Pagination } from './components/Pagination';
 import {
@@ -14,20 +14,57 @@ import {
   PeopleLoadingState,
 } from './components/PeopleState';
 import { CharacterDetailsModal } from './components/CharacterDetailsModal';
+import { CharacterControls } from './components/CharacterControls';
+import {
+  buildCharacterFilterOptions,
+  filterCharacters,
+  getCharacterTotalPages,
+  paginateCharacters,
+} from './utils/characterFilters';
 
 export function CharactersPage(): JSX.Element {
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [homeworld, setHomeworld] = useState('');
+  const [species, setSpecies] = useState('');
+  const [film, setFilm] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const { data, dataUpdatedAt, error, isError, isFetching, isPending, refetch } =
-    usePeopleQuery(page);
+    useCharacterCatalogQuery();
 
-  const characters = data?.results ?? [];
-  const totalPages = data ? Math.max(1, Math.ceil(data.count / PEOPLE_PAGE_SIZE)) : 1;
-  const hasPrevious = Boolean(data?.previous);
-  const hasNext = Boolean(data?.next);
+  const allCharacters = data?.characters ?? [];
+  const totalCharacterCount = data?.count ?? 0;
+  const filterOptions = buildCharacterFilterOptions(allCharacters);
+  const filteredCharacters = filterCharacters(allCharacters, {
+    searchTerm,
+    homeworld,
+    species,
+    film,
+  });
+  const totalPages = getCharacterTotalPages(filteredCharacters.length, PEOPLE_PAGE_SIZE);
+  const safePage = Math.min(page, totalPages);
+  const pageCharacters = paginateCharacters(filteredCharacters, safePage, PEOPLE_PAGE_SIZE);
+  const hasPrevious = safePage > 1;
+  const hasNext = safePage < totalPages;
   const showBlockingError = isError && !data;
   const showInlineError = isError && Boolean(data);
   const refreshedAt = dataUpdatedAt > 0 ? format(new Date(dataUpdatedAt), 'HH:mm') : null;
+  const activeFiltersCount =
+    Number(searchTerm.trim().length > 0) +
+    Number(homeworld.length > 0) +
+    Number(species.length > 0) +
+    Number(film.length > 0);
+
+  useEffect(() => {
+    setPage(1);
+    setSelectedCharacter(null);
+  }, [searchTerm, homeworld, species, film]);
+
+  useEffect(() => {
+    if (page !== safePage) {
+      setPage(safePage);
+    }
+  }, [page, safePage]);
 
   return (
     <PageShell className="gap-8">
@@ -42,8 +79,8 @@ export function CharactersPage(): JSX.Element {
               {env.appName}
             </h1>
             <p className="max-w-3xl text-base leading-7 text-slate-300 sm:text-lg">
-              Browse characters from the public SWAPI `/people` endpoint with pagination, loading
-              states, retry handling, and resilient query caching.
+              Browse, search, and filter characters from the public SWAPI `/people` endpoint with
+              pagination, loading states, retry handling, and resilient query caching.
             </p>
           </div>
         </div>
@@ -51,11 +88,11 @@ export function CharactersPage(): JSX.Element {
         <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
           <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Current page</p>
-            <p className="mt-1 text-2xl font-bold text-white">{page}</p>
+            <p className="mt-1 text-2xl font-bold text-white">{safePage}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Characters</p>
-            <p className="mt-1 text-2xl font-bold text-white">{data?.count ?? '—'}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Catalog</p>
+            <p className="mt-1 text-2xl font-bold text-white">{totalCharacterCount}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Refreshed</p>
@@ -68,7 +105,7 @@ export function CharactersPage(): JSX.Element {
         <PeopleLoadingState />
       ) : showBlockingError ? (
         <PeopleErrorState
-          title="Could not load the character list"
+          title="Could not load the character catalog"
           message={error instanceof Error ? error.message : 'Unknown API error.'}
           onRetry={() => {
             void refetch();
@@ -76,14 +113,50 @@ export function CharactersPage(): JSX.Element {
         />
       ) : (
         <section className="space-y-5">
+          <CharacterControls
+            activeFiltersCount={activeFiltersCount}
+            film={film}
+            filmOptions={filterOptions.filmOptions}
+            homeworld={homeworld}
+            homeworldOptions={filterOptions.homeworldOptions}
+            onFilmChange={(value) => {
+              setFilm(value);
+            }}
+            onHomeworldChange={(value) => {
+              setHomeworld(value);
+            }}
+            onReset={() => {
+              setSearchTerm('');
+              setHomeworld('');
+              setSpecies('');
+              setFilm('');
+              setPage(1);
+            }}
+            onSearchChange={(value) => {
+              setSearchTerm(value);
+            }}
+            onSpeciesChange={(value) => {
+              setSpecies(value);
+            }}
+            searchTerm={searchTerm}
+            species={species}
+            speciesOptions={filterOptions.speciesOptions}
+          />
+
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-400">
                 Character roster
               </p>
               <p className="text-sm text-slate-300">
-                Showing <span className="font-semibold text-white">{characters.length}</span> of{' '}
-                <span className="font-semibold text-white">{data?.count ?? 0}</span> records
+                Showing <span className="font-semibold text-white">{pageCharacters.length}</span> of{' '}
+                <span className="font-semibold text-white">{filteredCharacters.length}</span> matching
+                records
+                {activeFiltersCount > 0 ? (
+                  <span className="ml-2 text-hyperspace-100">
+                    ({activeFiltersCount} active filter{activeFiltersCount > 1 ? 's' : ''})
+                  </span>
+                ) : null}
               </p>
             </div>
 
@@ -95,7 +168,10 @@ export function CharactersPage(): JSX.Element {
                 void refetch();
               }}
             >
-              <FaSyncAlt aria-hidden="true" className={isFetching ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />
+              <FaSyncAlt
+                aria-hidden="true"
+                className={isFetching ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'}
+              />
               {isFetching ? 'Refreshing' : 'Refresh'}
             </button>
           </div>
@@ -109,16 +185,22 @@ export function CharactersPage(): JSX.Element {
             </div>
           ) : null}
 
-          {data && characters.length > 0 ? (
+          {filteredCharacters.length > 0 ? (
             <CharacterGrid
-              characters={characters}
+              characters={pageCharacters}
               onSelect={(character) => {
                 setSelectedCharacter(character);
               }}
-              page={page}
+              page={safePage}
             />
           ) : (
             <PeopleEmptyState
+              message={
+                activeFiltersCount > 0
+                  ? 'No characters matched your current search and filters. Clear the filters or try a wider search.'
+                  : 'The catalog is empty right now. Try refreshing the request.'
+              }
+              title={activeFiltersCount > 0 ? 'No matching characters' : 'No characters found'}
               onRetry={() => {
                 void refetch();
               }}
@@ -136,13 +218,13 @@ export function CharactersPage(): JSX.Element {
               hasPrevious={hasPrevious}
               onNext={() => {
                 setSelectedCharacter(null);
-                setPage((currentPage) => currentPage + 1);
+                setPage((currentPage) => Math.min(totalPages, currentPage + 1));
               }}
               onPrevious={() => {
                 setSelectedCharacter(null);
                 setPage((currentPage) => Math.max(1, currentPage - 1));
               }}
-              page={page}
+              page={safePage}
               totalPages={totalPages}
             />
           </div>

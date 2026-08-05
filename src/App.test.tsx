@@ -16,29 +16,49 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: /luke skywalker/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /leia organa/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /han solo/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /search characters/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /filter by homeworld/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /filter by species/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /filter by film/i })).toBeInTheDocument();
     expect(screen.getByText((_content, element) => element?.textContent === 'Page 1 of 2')).toBeInTheDocument();
   });
 
-  it('moves to the next page of characters', async () => {
+  it('filters characters by search and dropdown selections', async () => {
     const user = userEvent.setup();
 
     renderWithProviders(<App />);
 
     await screen.findByRole('heading', { name: /luke skywalker/i });
-    await user.click(screen.getByRole('button', { name: /next/i }));
+    await user.type(screen.getByRole('textbox', { name: /search characters/i }), 'Leia');
+    await user.selectOptions(screen.getByRole('combobox', { name: /filter by homeworld/i }), 'Alderaan');
+    await user.selectOptions(screen.getByRole('combobox', { name: /filter by species/i }), 'Human');
+    await user.selectOptions(screen.getByRole('combobox', { name: /filter by film/i }), 'A New Hope');
 
-    expect(await screen.findByRole('heading', { name: /darth vader/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /chewbacca/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /r2-d2/i })).toBeInTheDocument();
-    expect(screen.getByText((_content, element) => element?.textContent === 'Page 2 of 2')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /leia organa/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /luke skywalker/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /han solo/i })).not.toBeInTheDocument();
+    expect(screen.getByText((_content, element) => element?.textContent === 'Page 1 of 1')).toBeInTheDocument();
   });
 
-  it('opens a character details modal with homeworld information', async () => {
+  it('shows an empty state when filters match no characters', async () => {
     const user = userEvent.setup();
 
     renderWithProviders(<App />);
 
     await screen.findByRole('heading', { name: /luke skywalker/i });
+    await user.type(screen.getByRole('textbox', { name: /search characters/i }), 'ZZZ');
+
+    expect(await screen.findByText(/no matching characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/clear the filters or try a wider search/i)).toBeInTheDocument();
+  });
+
+  it('opens a character details modal from a filtered result', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    await screen.findByRole('heading', { name: /luke skywalker/i });
+    await user.type(screen.getByRole('textbox', { name: /search characters/i }), 'Luke');
     await user.click(screen.getByRole('button', { name: /view details for luke skywalker/i }));
 
     const dialog = await screen.findByRole('dialog', { name: /luke skywalker/i });
@@ -50,7 +70,20 @@ describe('App', () => {
     expect(modal.getByText(/desert/i)).toBeInTheDocument();
     expect(modal.getByText(/200000/i)).toBeInTheDocument();
     expect(modal.getByText(/4 films/i)).toBeInTheDocument();
-    expect(modal.getByText(/19bbY/i)).toBeInTheDocument();
+    expect(modal.getByText(/19BBY/i)).toBeInTheDocument();
+  });
+
+  it('moves to the next page of characters', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    await screen.findByRole('heading', { name: /luke skywalker/i });
+    await user.click(screen.getByRole('button', { name: /next/i }));
+
+    expect(await screen.findByRole('heading', { name: /darth vader/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /r2-d2/i })).toBeInTheDocument();
+    expect(screen.getByText((_content, element) => element?.textContent === 'Page 2 of 2')).toBeInTheDocument();
   });
 
   it('shows an error state when the API fails', async () => {
@@ -63,6 +96,6 @@ describe('App', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     }, { timeout: 5000 });
-    expect(screen.getByText(/could not load the character list/i)).toBeInTheDocument();
+    expect(screen.getByText(/could not load the character catalog/i)).toBeInTheDocument();
   });
 });
