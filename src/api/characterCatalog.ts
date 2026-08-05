@@ -5,28 +5,29 @@ import {
   buildEnrichedCharacter,
   buildFallbackEnrichedCharacter,
 } from '../features/characters/utils/characterDetails';
+import { mapWithConcurrency } from '../utils/async';
+
+const CHARACTER_RESOURCE_CONCURRENCY = 4;
 
 export async function fetchCharacterCatalog(): Promise<CharacterCatalog> {
   const peopleResponse = await fetchAllPeople();
 
-  const characterResults = await Promise.allSettled(
-    peopleResponse.results.map(async (character) => {
-      const { homeworld, species, films } = await fetchCharacterResources(character);
+  const characterResults = await mapWithConcurrency(
+    peopleResponse.results,
+    CHARACTER_RESOURCE_CONCURRENCY,
+    async (character) => {
+      try {
+        const { homeworld, species, films } = await fetchCharacterResources(character);
 
-      return buildEnrichedCharacter(character, homeworld, species, films);
-    }),
+        return buildEnrichedCharacter(character, homeworld, species, films);
+      } catch {
+        return buildFallbackEnrichedCharacter(character);
+      }
+    },
   );
 
-  const characters = characterResults.map((result, index) => {
-    if (result.status === 'fulfilled') {
-      return result.value;
-    }
-
-    return buildFallbackEnrichedCharacter(peopleResponse.results[index]!);
-  });
-
   return {
-    characters,
+    characters: characterResults,
     count: peopleResponse.count,
   };
 }

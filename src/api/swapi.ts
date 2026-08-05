@@ -32,6 +32,10 @@ export const buildSwapiUrlCandidates = (path: string): string[] => {
 
 export const buildSwapiRequestCandidates = (value: string): string[] => {
   if (isAbsoluteUrl(value)) {
+    if (!env.apiBaseUrl.startsWith('/')) {
+      return [value];
+    }
+
     const parsedUrl = new URL(value);
 
     if (parsedUrl.hostname === 'swapi.dev') {

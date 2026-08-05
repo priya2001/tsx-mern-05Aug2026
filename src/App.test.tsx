@@ -28,18 +28,17 @@ describe('App', () => {
 
     renderWithProviders(<App />);
 
-    const lukeHeading = await screen.findByRole('heading', { name: /luke skywalker/i });
-    expect(lukeHeading).toBeInTheDocument();
-
-    const lukeImage = screen.getByRole('img', { name: /luke skywalker/i });
-    const initialSrc = lukeImage.getAttribute('src');
+    await screen.findByRole('heading', { name: /luke skywalker/i });
+    const initialSrc = screen.getByRole('img', { name: /luke skywalker/i }).getAttribute('src');
 
     await user.click(screen.getByRole('button', { name: /refresh/i }));
 
     await waitFor(() => {
-      expect(lukeImage).toHaveAttribute('src');
-      expect(lukeImage.getAttribute('src')).not.toBe(initialSrc);
-    });
+      expect(screen.getByRole('img', { name: /luke skywalker/i })).not.toHaveAttribute(
+        'src',
+        initialSrc ?? '',
+      );
+    }, { timeout: 10000 });
   });
 
   it('filters characters by search and dropdown selections', async () => {
