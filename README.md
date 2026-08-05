@@ -63,13 +63,15 @@ cp .env.example .env
 
 The app uses the following environment variable:
 
-- `VITE_API_BASE_URL` - SWAPI base URL
+- `VITE_API_BASE_URL` - SWAPI base URL, usually `/api` in development and on Netlify
 
 Example:
 
 ```env
-VITE_API_BASE_URL=https://swapi.dev/api
+VITE_API_BASE_URL=/api
 ```
+
+If you deploy on Netlify, the included `netlify.toml` file rewrites `/api/*` requests to SWAPI, so the same app code works locally and in production.
 
 ## Scripts
 
