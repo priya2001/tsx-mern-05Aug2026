@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { buildPeopleUrl, buildSwapiUrl } from '../api/swapi';
+import { AUTH_FAKE_CREDENTIALS } from '../features/auth/constants/auth';
+import { createMockAuthSession, isAuthCredentials } from '../features/auth/utils/authSession';
 import type { Character, Film, PeopleApiResponse, Planet, Species } from '../types/swapi';
 
 const createCharacter = (character: Partial<Character>): Character =>
@@ -397,7 +399,54 @@ const createFilm = (film: Partial<Film>): Film =>
     ...film,
   }) as Film;
 
+const isAuthRefreshRequest = (
+  value: unknown,
+): value is { username: string; refreshToken: string } => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return typeof candidate.username === 'string' && typeof candidate.refreshToken === 'string';
+};
+
 export const handlers = [
+  http.post('/auth/login', async ({ request }) => {
+    const body: unknown = await request.json();
+
+    if (!isAuthCredentials(body)) {
+      return HttpResponse.json(
+        { message: 'Invalid login payload.' },
+        { status: 400 },
+      );
+    }
+
+    if (
+      body.username !== AUTH_FAKE_CREDENTIALS.username ||
+      body.password !== AUTH_FAKE_CREDENTIALS.password
+    ) {
+      return HttpResponse.json(
+        { message: 'Invalid username or password.' },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json(createMockAuthSession(body.username));
+  }),
+  http.post('/auth/refresh', async ({ request }) => {
+    const body: unknown = await request.json();
+
+    if (!isAuthRefreshRequest(body)) {
+      return HttpResponse.json(
+        { message: 'Invalid refresh payload.' },
+        { status: 400 },
+      );
+    }
+
+    return HttpResponse.json(createMockAuthSession(body.username));
+  }),
+  http.post('/auth/logout', () => new HttpResponse(null, { status: 204 })),
   http.get(buildSwapiUrl('/people/'), ({ request }) => {
     const page = Number(new URL(request.url).searchParams.get('page') ?? '1');
     return HttpResponse.json(responseForPage(page));
