@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { FaRocket, FaSyncAlt } from 'react-icons/fa';
+import { FaRocket, FaSignOutAlt, FaSyncAlt } from 'react-icons/fa';
 import { PEOPLE_PAGE_SIZE } from '../../api/people';
 import { env } from '../../config/env';
 import { PageShell } from '../../components/layout/PageShell';
@@ -21,8 +21,10 @@ import {
   getCharacterTotalPages,
   paginateCharacters,
 } from './utils/characterFilters';
+import { useAuth } from '../auth/hooks/useAuth';
 
 export function CharactersPage(): JSX.Element {
+  const { logout, session, isRefreshing: isAuthRefreshing } = useAuth();
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [homeworld, setHomeworld] = useState('');
@@ -96,8 +98,13 @@ export function CharactersPage(): JSX.Element {
             <p className="mt-1 text-2xl font-bold text-white">{totalCharacterCount}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Refreshed</p>
-            <p className="mt-1 text-2xl font-bold text-white">{refreshedAt ?? '—'}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Signed in</p>
+            <p className="mt-1 truncate text-lg font-bold text-white">
+              {session?.user.displayName ?? session?.user.username ?? 'Guest'}
+            </p>
+            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">
+              {refreshedAt ? `Refreshed ${refreshedAt}` : 'Session active'}
+            </p>
           </div>
         </div>
       </header>
@@ -175,6 +182,21 @@ export function CharactersPage(): JSX.Element {
                 className={isFetching ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'}
               />
               {isFetching ? 'Refreshing' : 'Refresh'}
+            </button>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:border-rose-300/30 hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isAuthRefreshing}
+              onClick={() => {
+                void logout();
+              }}
+            >
+              <FaSignOutAlt
+                aria-hidden="true"
+                className={isAuthRefreshing ? 'h-3.5 w-3.5 animate-pulse' : 'h-3.5 w-3.5'}
+              />
+              {isAuthRefreshing ? 'Signing out' : 'Logout'}
             </button>
           </div>
 

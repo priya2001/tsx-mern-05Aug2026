@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { buildPeopleUrl } from './api/swapi';
+import { AUTH_STORAGE_KEY } from './features/auth/constants/auth';
 import { renderWithProviders } from './test/render';
 import { server } from './mocks/server';
 
@@ -27,6 +28,18 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /sign in to the app/i }));
 
     expect(await screen.findByRole('heading', { name: /luke skywalker/i })).toBeInTheDocument();
+  });
+
+  it('logs out and returns to the login page', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    expect(await screen.findByRole('heading', { name: /luke skywalker/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /logout/i }));
+
+    expect(await screen.findByRole('heading', { name: /sign in to explore the galaxy/i })).toBeInTheDocument();
+    expect(window.localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
   });
 
   it('renders the first page of characters', async () => {
