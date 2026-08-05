@@ -317,7 +317,7 @@ const pageTwoCharacters: Character[] = [
 const responseForPage = (page: number): PeopleApiResponse => {
   if (page === 1) {
     return {
-      count: 12,
+      count: 15,
       next: buildPeopleUrl(2),
       previous: null,
       results: pageOneCharacters,
@@ -326,7 +326,7 @@ const responseForPage = (page: number): PeopleApiResponse => {
 
   if (page === 2) {
     return {
-      count: 12,
+      count: 15,
       next: null,
       previous: buildPeopleUrl(1),
       results: pageTwoCharacters,
