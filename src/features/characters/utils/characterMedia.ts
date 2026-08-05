@@ -1,7 +1,6 @@
 import type { Character } from '../../../types/swapi';
 
-const randomSeed = (): string => Math.random().toString(36).slice(2, 10);
-const PICSUM_IMAGE_POOL_SIZE = 1084;
+const PICSUM_IMAGE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 237] as const;
 
 const hashString = (value: string): number => {
   let hash = 0;
@@ -16,7 +15,7 @@ const hashString = (value: string): number => {
 const buildPicsumImageId = (value: string, variant: number): number => {
   const hash = hashString(`${value}:${variant}`);
 
-  return (hash % PICSUM_IMAGE_POOL_SIZE) + 1;
+  return PICSUM_IMAGE_IDS[hash % PICSUM_IMAGE_IDS.length] ?? PICSUM_IMAGE_IDS[0];
 };
 
 export const createCharacterImageSeed = (
@@ -24,10 +23,15 @@ export const createCharacterImageSeed = (
   page: number,
   index: number,
   refreshToken = 0,
-): string => `${character.url}-${page}-${index}-${refreshToken}-${randomSeed()}`;
+): string => `${character.url}|${page}|${index}|${refreshToken}`;
 
-export const buildCharacterImageUrl = (seed: string, variant = 0): string =>
-  `https://picsum.photos/id/${buildPicsumImageId(seed, variant)}/720/960`;
+export const buildCharacterImageUrl = (seed: string, variant = 0): string => {
+  const [characterUrl = '', page = '0', index = '0', refreshToken = '0'] = seed.split('|');
+  const baseSeed = `${characterUrl}|${page}|${index}`;
+  const refreshOffset = Number(refreshToken) || 0;
+
+  return `/picsum/${buildPicsumImageId(baseSeed, refreshOffset + variant)}.jpg`;
+};
 
 export const buildCharacterFallbackImageUrl = (character: Character, seed: string): string =>
-  buildCharacterImageUrl(`${character.url}-${seed}`, 1);
+  buildCharacterImageUrl(`${character.url}|${seed}`, 1);
