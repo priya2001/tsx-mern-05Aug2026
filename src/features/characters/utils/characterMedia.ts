@@ -1,6 +1,6 @@
 import type { Character } from '../../../types/swapi';
 
-const PICSUM_IMAGE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 237] as const;
+const PICSUM_IMAGE_IDS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 237];
 
 const hashString = (value: string): number => {
   let hash = 0;
@@ -29,8 +29,12 @@ export const buildCharacterImageUrl = (seed: string, variant = 0): string => {
   const [characterUrl = '', page = '0', index = '0', refreshToken = '0'] = seed.split('|');
   const baseSeed = `${characterUrl}|${page}|${index}`;
   const refreshOffset = Number(refreshToken) || 0;
+  const baseIndex = buildPicsumImageId(baseSeed, 0);
+  const basePosition = PICSUM_IMAGE_IDS.indexOf(baseIndex);
+  const refreshPosition = (basePosition + refreshOffset + variant) % PICSUM_IMAGE_IDS.length;
+  const imageId = PICSUM_IMAGE_IDS[refreshPosition] ?? PICSUM_IMAGE_IDS[0];
 
-  return `/picsum/${buildPicsumImageId(baseSeed, refreshOffset + variant)}.jpg`;
+  return `/picsum/${imageId}.jpg`;
 };
 
 export const buildCharacterFallbackImageUrl = (character: Character, seed: string): string =>
