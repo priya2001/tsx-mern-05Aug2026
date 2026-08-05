@@ -73,6 +73,50 @@ describe('App', () => {
     expect(modal.getByText(/19BBY/i)).toBeInTheDocument();
   });
 
+  it('closes the character details modal with escape and overlay click', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    await screen.findByRole('heading', { name: /luke skywalker/i });
+    await user.click(screen.getByRole('button', { name: /view details for luke skywalker/i }));
+
+    const dialog = await screen.findByRole('dialog', { name: /luke skywalker/i });
+    expect(dialog).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: /luke skywalker/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /view details for leia organa/i }));
+    const leiaDialog = await screen.findByRole('dialog', { name: /leia organa/i });
+    expect(leiaDialog).toBeInTheDocument();
+
+    const overlay = leiaDialog.parentElement?.firstElementChild;
+    expect(overlay).not.toBeNull();
+    if (overlay instanceof HTMLElement) {
+      await user.click(overlay);
+    }
+
+    expect(screen.queryByRole('dialog', { name: /leia organa/i })).not.toBeInTheDocument();
+  });
+
+  it('clears filters and restores the full catalog', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    await screen.findByRole('heading', { name: /luke skywalker/i });
+    await user.type(screen.getByRole('textbox', { name: /search characters/i }), 'Leia');
+    await user.selectOptions(screen.getByRole('combobox', { name: /filter by homeworld/i }), 'Alderaan');
+
+    expect(await screen.findByRole('heading', { name: /leia organa/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /clear filters/i }));
+
+    expect(await screen.findByRole('heading', { name: /luke skywalker/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /han solo/i })).toBeInTheDocument();
+    expect(screen.getByText((_content, element) => element?.textContent === 'Page 1 of 2')).toBeInTheDocument();
+  });
+
   it('moves to the next page of characters', async () => {
     const user = userEvent.setup();
 
