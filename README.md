@@ -71,7 +71,7 @@ Example:
 VITE_API_BASE_URL=/api
 ```
 
-If you deploy on Netlify, the included `netlify.toml` file rewrites `/api/*` requests to SWAPI, so the same app code works locally and in production.
+If you deploy on Netlify, the included `netlify.toml` file rewrites `/api/*` requests to SWAPI. If you deploy on Vercel, the included `vercel.json` file does the same rewrite. The same app code works locally and in production on both platforms.
 
 ## Scripts
 
