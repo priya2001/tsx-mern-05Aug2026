@@ -205,7 +205,7 @@ export function CharacterDetailsModal({
                     <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
                       <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Residents</dt>
                       <dd className="mt-1 text-sm font-semibold text-slate-50">
-                        {data.homeworld.population}
+                        {data.homeworld.residents.length}
                       </dd>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">

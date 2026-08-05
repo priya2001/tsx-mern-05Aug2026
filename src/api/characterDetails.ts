@@ -1,3 +1,5 @@
+import { fetchValidatedJsonFromCandidates } from './request';
+import { buildSwapiRequestCandidates } from './swapi';
 import type { Character, Film, Planet, Species } from '../types/swapi';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -14,26 +16,6 @@ const isNullableString = (value: unknown): value is string | null =>
 const speciesRequestCache = new Map<string, Promise<Species>>();
 const planetRequestCache = new Map<string, Promise<Planet>>();
 const filmRequestCache = new Map<string, Promise<Film>>();
-
-const fetchValidatedJson = async <T>(
-  url: string,
-  isValue: (value: unknown) => value is T,
-  errorMessage: string,
-): Promise<T> => {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`${errorMessage} Server responded with ${response.status}.`);
-  }
-
-  const data: unknown = await response.json();
-
-  if (!isValue(data)) {
-    throw new Error(errorMessage);
-  }
-
-  return data;
-};
 
 const fetchCachedJson = <T>(
   cache: Map<string, Promise<T>>,
@@ -128,19 +110,31 @@ const isFilm = (value: unknown): value is Film => {
 
 export async function fetchSpeciesByUrl(url: string): Promise<Species> {
   return fetchCachedJson(speciesRequestCache, url, () =>
-    fetchValidatedJson(url, isSpecies, 'Received an invalid species response from the API.'),
+    fetchValidatedJsonFromCandidates(
+      buildSwapiRequestCandidates(url),
+      isSpecies,
+      'Received an invalid species response from the API.',
+    ),
   );
 }
 
 export async function fetchPlanetByUrl(url: string): Promise<Planet> {
   return fetchCachedJson(planetRequestCache, url, () =>
-    fetchValidatedJson(url, isPlanet, 'Received an invalid homeworld response from the API.'),
+    fetchValidatedJsonFromCandidates(
+      buildSwapiRequestCandidates(url),
+      isPlanet,
+      'Received an invalid homeworld response from the API.',
+    ),
   );
 }
 
 export async function fetchFilmByUrl(url: string): Promise<Film> {
   return fetchCachedJson(filmRequestCache, url, () =>
-    fetchValidatedJson(url, isFilm, 'Received an invalid film response from the API.'),
+    fetchValidatedJsonFromCandidates(
+      buildSwapiRequestCandidates(url),
+      isFilm,
+      'Received an invalid film response from the API.',
+    ),
   );
 }
 

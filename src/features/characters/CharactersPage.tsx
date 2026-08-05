@@ -28,6 +28,7 @@ export function CharactersPage(): JSX.Element {
   const [homeworld, setHomeworld] = useState('');
   const [species, setSpecies] = useState('');
   const [film, setFilm] = useState('');
+  const [imageRefreshToken, setImageRefreshToken] = useState(0);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const { data, dataUpdatedAt, error, isError, isFetching, isPending, refetch } =
     useCharacterCatalogQuery();
@@ -165,6 +166,7 @@ export function CharactersPage(): JSX.Element {
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isFetching}
               onClick={() => {
+                setImageRefreshToken((currentValue) => currentValue + 1);
                 void refetch();
               }}
             >
@@ -192,6 +194,7 @@ export function CharactersPage(): JSX.Element {
                 setSelectedCharacter(character);
               }}
               page={safePage}
+              refreshToken={imageRefreshToken}
             />
           ) : (
             <PeopleEmptyState

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Character } from '../../../types/swapi';
 import { buildCharacterFallbackImageUrl, buildCharacterImageUrl } from '../utils/characterMedia';
 
@@ -16,6 +16,11 @@ export function CharacterImage({
   loading = 'lazy',
 }: CharacterImageProps): JSX.Element {
   const [useFallbackImage, setUseFallbackImage] = useState(false);
+
+  useEffect(() => {
+    setUseFallbackImage(false);
+  }, [character.url, seed]);
+
   const source = useFallbackImage
     ? buildCharacterFallbackImageUrl(character, seed)
     : buildCharacterImageUrl(seed);

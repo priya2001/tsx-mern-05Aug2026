@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { format } from 'date-fns';
 import type { Character } from '../../../types/swapi';
 import { createCharacterImageSeed } from '../utils/characterMedia';
@@ -9,6 +9,7 @@ type CharacterCardProps = {
   character: Character;
   page: number;
   index: number;
+  refreshToken: number;
   onSelect: (character: Character) => void;
 };
 
@@ -16,9 +17,13 @@ export function CharacterCard({
   character,
   page,
   index,
+  refreshToken,
   onSelect,
 }: CharacterCardProps): JSX.Element {
-  const [imageSeed] = useState(() => createCharacterImageSeed(character, page, index));
+  const imageSeed = useMemo(
+    () => createCharacterImageSeed(character, page, index, refreshToken),
+    [character, index, page, refreshToken],
+  );
   const theme = getCharacterTheme(character);
   const addedDate = format(new Date(character.created), 'dd-MM-yyyy');
 

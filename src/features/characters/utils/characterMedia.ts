@@ -30,7 +30,8 @@ export const createCharacterImageSeed = (
   character: Character,
   page: number,
   index: number,
-): string => `${character.url}-${page}-${index}-${randomSeed()}`;
+  refreshToken = 0,
+): string => `${character.url}-${page}-${index}-${refreshToken}-${randomSeed()}`;
 
 export const buildCharacterImageUrl = (seed: string): string =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/720/960`;

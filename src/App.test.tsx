@@ -23,6 +23,25 @@ describe('App', () => {
     expect(screen.getByText((_content, element) => element?.textContent === 'Page 1 of 2')).toBeInTheDocument();
   });
 
+  it('refreshes character artwork when the roster is reloaded', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />);
+
+    const lukeHeading = await screen.findByRole('heading', { name: /luke skywalker/i });
+    expect(lukeHeading).toBeInTheDocument();
+
+    const lukeImage = screen.getByRole('img', { name: /luke skywalker/i });
+    const initialSrc = lukeImage.getAttribute('src');
+
+    await user.click(screen.getByRole('button', { name: /refresh/i }));
+
+    await waitFor(() => {
+      expect(lukeImage).toHaveAttribute('src');
+      expect(lukeImage.getAttribute('src')).not.toBe(initialSrc);
+    });
+  });
+
   it('filters characters by search and dropdown selections', async () => {
     const user = userEvent.setup();
 
@@ -68,7 +87,7 @@ describe('App', () => {
     expect(modal.getByText(/tatooine/i)).toBeInTheDocument();
     expect(modal.getByText(/arid/i)).toBeInTheDocument();
     expect(modal.getByText(/desert/i)).toBeInTheDocument();
-    expect(modal.getByText(/200000/i)).toBeInTheDocument();
+    expect(modal.getByText((_content, element) => element?.textContent === '1')).toBeInTheDocument();
     expect(modal.getByText(/4 films/i)).toBeInTheDocument();
     expect(modal.getByText(/19BBY/i)).toBeInTheDocument();
   });

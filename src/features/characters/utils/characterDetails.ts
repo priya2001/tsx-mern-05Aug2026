@@ -52,3 +52,11 @@ export const buildEnrichedCharacter = (
   filmTitles: films.map((film) => film.title),
   imageUrl: buildCharacterImageUrl(character.url),
 });
+
+export const buildFallbackEnrichedCharacter = (character: Character): EnrichedCharacter => ({
+  ...character,
+  speciesName: getCharacterSpeciesName(character, []),
+  homeworldName: 'Unknown homeworld',
+  filmTitles: [],
+  imageUrl: buildCharacterImageUrl(character.url),
+});

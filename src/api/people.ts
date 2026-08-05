@@ -1,4 +1,5 @@
-import { buildPeopleUrl } from './swapi';
+import { buildSwapiUrlCandidates } from './swapi';
+import { fetchValidatedJsonFromCandidates } from './request';
 import type { Character, PeopleApiResponse } from '../types/swapi';
 
 export const PEOPLE_PAGE_SIZE = 10;
@@ -54,19 +55,11 @@ const isPeopleApiResponse = (value: unknown): value is PeopleApiResponse => {
 };
 
 export async function fetchPeople(page: number): Promise<PeopleApiResponse> {
-  const response = await fetch(buildPeopleUrl(page));
-
-  if (!response.ok) {
-    throw new Error(`Unable to load Star Wars characters. Server responded with ${response.status}.`);
-  }
-
-  const data: unknown = await response.json();
-
-  if (!isPeopleApiResponse(data)) {
-    throw new Error('Received an invalid people response from the API.');
-  }
-
-  return data;
+  return fetchValidatedJsonFromCandidates(
+    buildSwapiUrlCandidates(`/people/${page > 1 ? `?page=${page}` : ''}`),
+    isPeopleApiResponse,
+    'Received an invalid people response from the API.',
+  );
 }
 
 export async function fetchAllPeople(): Promise<PeopleApiResponse> {
