@@ -99,7 +99,7 @@ export function CharactersPage(): JSX.Element {
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Signed in</p>
-            <p className="mt-1 truncate text-lg font-bold text-white">
+            <p className="mt-1 whitespace-normal break-words text-lg font-bold leading-snug text-white">
               {session?.user.displayName ?? session?.user.username ?? 'Guest'}
             </p>
             <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">
