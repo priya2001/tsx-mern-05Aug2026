@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-const SWAPI_BASE_URL = 'https://swapi.dev/api';
+const SWAPI_ORIGIN = 'https://swapi.dev';
 
 const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
@@ -8,14 +8,42 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
 };
 
-const getRequestPath = (request: IncomingMessage): string => {
-  const requestUrl = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
-  const apiPath = requestUrl.pathname.startsWith('/api')
-    ? requestUrl.pathname.slice('/api'.length)
-    : requestUrl.pathname;
-  const normalizedPath = apiPath.startsWith('/') ? apiPath : `/${apiPath}`;
+interface ApiRequest extends IncomingMessage {
+  query: Record<string, string | string[] | undefined>;
+}
 
-  return `${normalizedPath}${requestUrl.search}`;
+const getProxyPath = (request: ApiRequest): string => {
+  const rawPath = request.query.path;
+  const pathValue = Array.isArray(rawPath) ? rawPath[0] : rawPath;
+  const trimmedPath = (pathValue ?? '').trim().replace(/^\/+/, '');
+
+  return trimmedPath.length > 0 ? trimmedPath : '';
+};
+
+const getTargetUrl = (request: ApiRequest): URL => {
+  const targetPath = getProxyPath(request);
+  const baseUrl = new URL(`api/${targetPath}`, `${SWAPI_ORIGIN}/`);
+
+  for (const [key, value] of Object.entries(request.query)) {
+    if (key === 'path') {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== undefined) {
+          baseUrl.searchParams.append(key, item);
+        }
+      }
+      continue;
+    }
+
+    if (value !== undefined) {
+      baseUrl.searchParams.set(key, value);
+    }
+  }
+
+  return baseUrl;
 };
 
 const sendJsonError = (response: ServerResponse, statusCode: number, message: string): void => {
@@ -27,7 +55,7 @@ const sendJsonError = (response: ServerResponse, statusCode: number, message: st
 };
 
 export default async function handler(
-  request: IncomingMessage,
+  request: ApiRequest,
   response: ServerResponse,
 ): Promise<void> {
   if (request.method === 'OPTIONS') {
@@ -41,7 +69,7 @@ export default async function handler(
     return;
   }
 
-  const targetUrl = new URL(getRequestPath(request), `${SWAPI_BASE_URL}/`);
+  const targetUrl = getTargetUrl(request);
 
   try {
     const upstreamResponse = await fetch(targetUrl, {
@@ -62,4 +90,3 @@ export default async function handler(
     sendJsonError(response, 502, 'Unable to reach the SWAPI upstream service.');
   }
 }
-
