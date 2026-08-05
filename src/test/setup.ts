@@ -10,6 +10,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   server.resetHandlers();
+  window.localStorage.clear();
 });
 
 afterAll(() => {

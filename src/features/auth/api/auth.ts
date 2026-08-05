@@ -1,3 +1,4 @@
+import { AUTH_FAKE_CREDENTIALS } from '../constants/auth';
 import type { AuthCredentials, AuthSession } from '../types/auth';
 import { createMockAuthSession, isAuthCredentials, isAuthSession } from '../utils/authSession';
 
@@ -50,12 +51,27 @@ export const loginWithCredentials = async (
     throw new Error('Invalid login credentials payload.');
   }
 
+  if (import.meta.env.PROD) {
+    if (
+      credentials.username !== AUTH_FAKE_CREDENTIALS.username ||
+      credentials.password !== AUTH_FAKE_CREDENTIALS.password
+    ) {
+      throw new Error('Invalid username or password.');
+    }
+
+    return createMockAuthSession(credentials.username);
+  }
+
   const response = await postJson('/auth/login', credentials);
 
   return parseAuthResponse(response, isAuthSession, 'Invalid auth session from login.');
 };
 
 export const refreshAuthSession = async (session: AuthSession): Promise<AuthSession> => {
+  if (import.meta.env.PROD) {
+    return createMockAuthSession(session.user.username);
+  }
+
   const response = await postJson('/auth/refresh', {
     username: session.user.username,
     refreshToken: session.refreshToken,
@@ -65,6 +81,10 @@ export const refreshAuthSession = async (session: AuthSession): Promise<AuthSess
 };
 
 export const logoutSession = async (): Promise<void> => {
+  if (import.meta.env.PROD) {
+    return;
+  }
+
   await fetch('/auth/logout', {
     method: 'POST',
   });

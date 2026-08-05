@@ -8,6 +8,27 @@ import { renderWithProviders } from './test/render';
 import { server } from './mocks/server';
 
 describe('App', () => {
+  it('shows the login page when no auth session is stored', async () => {
+    renderWithProviders(<App />, { authSession: null });
+
+    expect(
+      await screen.findByRole('heading', { name: /sign in to explore the galaxy/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in to the app/i })).toBeInTheDocument();
+    expect(screen.getByText(/demo credentials/i)).toBeInTheDocument();
+  });
+
+  it('logs in with the fake credentials and opens the catalog', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<App />, { authSession: null });
+
+    await screen.findByRole('heading', { name: /sign in to explore the galaxy/i });
+    await user.click(screen.getByRole('button', { name: /sign in to the app/i }));
+
+    expect(await screen.findByRole('heading', { name: /luke skywalker/i })).toBeInTheDocument();
+  });
+
   it('renders the first page of characters', async () => {
     renderWithProviders(<App />);
 
